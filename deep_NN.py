@@ -55,6 +55,47 @@ for epoch in range(num_epochs):
         data = data.to(device=device)
         targets = targets.to(device=device)
 
-        print(data.shape)
+        # flattend data
+        data = data.reshape(data.shape[0], -1)
+        scores = model(data)
+        loss = criterion(scores, targets)
+
+        # backward
+        optimizer.zero_grad()
+        loss.backward()
+
+        # gradDescent (Adam step)
+        optimizer.step()
 
 # Check model accuracy on trainting and test set
+
+
+def check_accuracy(loader, model):
+
+    if loader.dataset.train:
+        print(f'Checking accuracy on train set')
+    else:
+        print(f'Checking accuracy on test set')
+
+    num_correct = 0
+    num_samples = 0
+    model.eval()
+
+    with torch.no_grad():
+        for x, y in loader:
+            x = x.to(device=device)
+            y = y.to(device=device)
+            x = x.reshape(x.shape[0], -1)
+
+            scores = model(x)
+            _, predictions = scores.max(1)
+            num_correct += (predictions == y).sum()
+            num_samples += predictions.size(0)
+        print(
+            f'Got {num_correct} / {num_samples} with accuracy {float(num_correct)/float(num_samples) *100}')
+    model.train()
+    return model
+
+
+check_accuracy(train_loader, model)
+check_accuracy(test_loader, model)
